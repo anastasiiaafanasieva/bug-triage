@@ -1,0 +1,11 @@
+{
+  "ownedProject": "wix-private/santa-editor",
+  "relatedProjects": [
+    "wix-private/document-management",
+    "wix-private/editor-elements",
+    "wix-private/editor-platform",
+    "wix-private/wix-ck-editor",
+    "wix-private/thunderbolt",
+    "wix-private/editorx-santa-editor-bridge"
+  ]
+}
