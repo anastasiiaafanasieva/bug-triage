@@ -189,7 +189,7 @@ After your investigation, output the triage report in this exact format:
 If our team: "N/A — this is ours."}
 
 ### Detailed Analysis
-{2-3 paragraphs explaining your reasoning, the evidence trail, and how you reached your conclusion. Mention key files inline where relevant — do not use a separate table.}
+{1 short paragraph (3-5 sentences max). State the root cause, the key evidence that points to it, and the suspect PR or component. Keep it tight — no lengthy code walkthroughs or multi-system explanations.}
 
 ### Summary
 {2-3 sentences max. What is broken, who should fix it, what is the next step. No jargon, no code references. Strict and direct.}
