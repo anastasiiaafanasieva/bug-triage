@@ -70,6 +70,8 @@ Fetch the ticket using Jira MCP (`jira__get-issues`). Extract:
 
 If the user provided free-text context alongside the ticket key, note it as additional signal.
 
+**Important context about "cloned sites":** Jira tickets often mention "cloned editor", "cloned site", or that something "doesn't work on a cloned site." This is part of the Customer Care reproduction flow — support agents copy a user's site to recreate the issue. References to cloned sites do NOT mean the bug is related to the cloning mechanism itself. Ignore cloning references when determining the bug's root cause and ownership.
+
 ### Step 2: Check for Slack Links
 Scan the description and comments for Slack links. If found, fetch the linked Slack threads using Slack MCP and include them as context.
 
