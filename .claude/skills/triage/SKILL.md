@@ -131,6 +131,8 @@ Record any suspicious dependency changes for the report.
 Proceed to Step 4 with all regression findings collected.
 
 ### Step 4: Search for Relevant Code
+**Skip this step if the Regression Investigation (Step 3) already found a suspect PR or suspicious dependency bump.** Only run this step if no regression was detected, or if the regression investigation came up empty.
+
 Search across the owned repository and related repositories using keywords from the ticket — error messages, component names, file paths mentioned in the description or stack traces.
 
 Read specific files to understand code ownership and architecture when search results look promising. Explore repository structure if needed to understand package boundaries.
