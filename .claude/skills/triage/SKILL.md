@@ -42,14 +42,14 @@ Use GitHub MCP tools (Octocode) for all code investigation:
 - `octocode__githubViewRepoStructure` — explore repository layout
 - `octocode__githubSearchPullRequests` — find relevant PRs
 
-**Fallback:** If any GitHub MCP call fails (timeout, auth error, server unavailable), silently retry the same operation using the `gh` CLI. Do not inform the user about the fallback. Equivalent `gh` commands:
-- Search code: `gh search code "<query>" --repo <owner/repo> --limit 10`
-- Get file content: `gh api repos/<owner/repo>/contents/<path> --jq '.content' | base64 -d`
-- View repo structure: `gh api repos/<owner/repo>/git/trees/master --jq '.tree[].path'`
-- Search PRs: `gh search prs "<query>" --repo <owner/repo> --limit 10`
-- List release PRs: `gh pr list --repo <owner/repo> --state merged --base master --limit 50`
-- Get tags: `gh api repos/<owner/repo>/tags --jq '.[].name'`
-- Compare tags: `gh api repos/<owner/repo>/compare/<tag1>...<tag2> --jq '.commits[].commit.message'`
+**Fallback:** If any GitHub MCP call fails (timeout, auth error, server unavailable), silently retry the same operation using `/usr/local/bin/gh`. Do not inform the user about the fallback. Equivalent commands:
+- Search code: `/usr/local/bin/gh search code "<query>" --repo <owner/repo> --limit 10`
+- Get file content: `/usr/local/bin/gh api repos/<owner/repo>/contents/<path> --jq '.content' | base64 -d`
+- View repo structure: `/usr/local/bin/gh api repos/<owner/repo>/git/trees/master --jq '.tree[].path'`
+- Search PRs: `/usr/local/bin/gh search prs "<query>" --repo <owner/repo> --limit 10`
+- List release PRs: `/usr/local/bin/gh pr list --repo <owner/repo> --state merged --base master --limit 50`
+- Get tags: `/usr/local/bin/gh api repos/<owner/repo>/tags --jq '.[].name'`
+- Compare tags: `/usr/local/bin/gh api repos/<owner/repo>/compare/<tag1>...<tag2> --jq '.commits[].commit.message'`
 
 ### Slack MCP
 Scan the Jira ticket description and comments for Slack links (e.g., URLs containing `slack.com/archives`). If found, use Slack MCP tools to fetch the linked thread:
@@ -120,10 +120,14 @@ Only run this if Step 3d found no direct suspect PR.
 
 Among the PRs in the release, look for dependency version bump PRs:
 - PRs titled "bump responsive-editor-packages", "bump REP", or similar dependency update patterns.
-- For each bump PR found:
-  1. Read the PR diff to extract the old and new dependency version numbers.
-  2. Search the dependency repository for changes between those two versions (tags, releases, or commits).
-  3. Check if any of those dependency changes are related to the bug's symptoms.
+- For each bump PR found, **you MUST find the actual commits that went into the bump. Never give up and pivot to "reading current code".**
+
+  **How to find commits in a dependency bump:**
+  1. Read the bump commit diff (especially `package.json`) to extract the dependency version change (e.g., `@wix/responsive-editor-packages` from `^1.18338.0` to `^1.18341.0`).
+  2. Compare versions in the dependency repo using `com.wixpress.` prefix tags:
+     `/usr/local/bin/gh api "repos/<owner>/<dep-repo>/compare/com.wixpress.<package-name>@<old-version>...com.wixpress.<package-name>@<new-version>"` 
+     Example: `/usr/local/bin/gh api "repos/wix-private/responsive-editor-packages/compare/com.wixpress.responsive-editor-packages@1.18338.0...com.wixpress.responsive-editor-packages@1.18341.0"`
+  3. This returns all commits between the two versions. Analyze their messages and code changes for relevance to the bug's symptoms. Read the actual diffs of suspicious commits.
 
 Record any suspicious dependency changes for the report.
 
@@ -131,13 +135,15 @@ Record any suspicious dependency changes for the report.
 Proceed to Step 4 with all regression findings collected.
 
 ### Step 4: Search for Relevant Code
-**Skip this step if the Regression Investigation (Step 3) already found a suspect PR or suspicious dependency bump.** Only run this step if no regression was detected, or if the regression investigation came up empty.
 
-Search across the owned repository and related repositories using keywords from the ticket — error messages, component names, file paths mentioned in the description or stack traces.
+**If regression was detected:** Focus this step on deepening the regression investigation. For each suspect PR or dependency bump found in Step 3:
+- Read the actual code changes in the suspect PR — understand what was modified and why it could cause the bug.
+- For dependency version bumps (e.g., "bump REP", "bump responsive-editor-packages"): go into the dependency repository, find all commits between the old and new version, and analyze those commits for suspicious changes related to the bug's symptoms. Read the code diffs, not just commit messages.
+- If the suspect is a specific commit in a bumped dependency, trace it further — what files did it change, what behavior did it alter.
 
-Read specific files to understand code ownership and architecture when search results look promising. Explore repository structure if needed to understand package boundaries.
+**If no regression:** Search across the owned repository and related repositories using keywords from the ticket — error messages, component names, file paths mentioned in the description or stack traces. Read specific files to understand code ownership and architecture when search results look promising. Explore repository structure if needed to understand package boundaries.
 
-Be thorough but efficient — focus on finding evidence for ownership. Investigate 5-10 code locations typically.
+Be thorough but efficient — focus on finding evidence. Investigate 5-10 code locations typically.
 
 ### Step 5: Clarify If Needed
 If the ticket is too vague to proceed meaningfully, pause and ask the user a specific clarifying question. Triggers:
